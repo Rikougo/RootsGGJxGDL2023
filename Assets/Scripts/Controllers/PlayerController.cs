@@ -18,6 +18,7 @@ namespace Roots
         [SerializeField] private float m_cutSize = 1.0f;
         [SerializeField] private float m_cameraSpeed = 2.0f;
         [SerializeField] private float m_maxCapacity = 10.0f;
+        [SerializeField] private float m_recoverFactor = 0.5f;
             
         [Header("Components")]
         [SerializeField] private Transform m_trackingPoint;
@@ -128,7 +129,8 @@ namespace Roots
             if (ZoomMode || !m_clicking)
             {
                 // PASSIVE CAPACITY INCREASE
-                m_currentCapacity += Time.deltaTime;
+                m_currentCapacity += Time.deltaTime * m_recoverFactor;
+                m_currentCapacity = Mathf.Min(m_maxCapacity, m_currentCapacity);
             }
 
             if (m_globalProfile.TryGet<ColorAdjustments>(out var l_adjustments))
