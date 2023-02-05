@@ -74,6 +74,12 @@ namespace Roots
             }
         }
 
+        public float Capacity
+        {
+            get => m_currentCapacity;
+            set => m_currentCapacity = Mathf.Min(value, m_maxCapacity);
+        }
+
         private void Awake()
         {
             m_shapePool = GetComponent<SpriteShapeControllerPool>();
@@ -140,8 +146,7 @@ namespace Roots
             if (ZoomMode || !m_clicking)
             {
                 // PASSIVE CAPACITY INCREASE
-                m_currentCapacity += Time.deltaTime * m_recoverFactor;
-                m_currentCapacity = Mathf.Min(m_maxCapacity, m_currentCapacity);
+                Capacity += Time.deltaTime * m_recoverFactor;
             }
 
             if (m_globalProfile.TryGet<ColorAdjustments>(out var l_adjustments))
