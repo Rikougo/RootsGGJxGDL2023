@@ -12,7 +12,6 @@ namespace Roots
         [SerializeField] private float m_stayOnTreeDuration = 0.2f;
         
         [SerializeField] private CinemachineVirtualCamera m_rootVirtualCamera;
-        [SerializeField] private CinemachineVirtualCamera m_treeVirtualCamera;
         [SerializeField] private Volume m_globalBloomVolume;
         [SerializeField] private UIBorder m_topBorder, m_bottomBorder;
         [SerializeField] private AudioClip m_itemFoundSound;
@@ -20,6 +19,7 @@ namespace Roots
         private VolumeProfile m_globalBloomProfile;
         private Bloom m_bloomOverride;
         private ColorAdjustments m_colorAdjustmentsOverride;
+        private CinemachineVirtualCamera m_treeVirtualCamera;
 
         private bool m_playing;
         private float m_wanderingTimer;
@@ -46,9 +46,11 @@ namespace Roots
             }
 
             m_playerController = p_playerController;
-            m_playerController.InCinematic = true;
-            m_initialRootPos = m_playerController.CurrentTrackedPosition;
             m_collectible = p_collectible;
+            m_treeVirtualCamera = m_collectible.Camera;
+            m_playerController.InCinematic = true;
+            m_playerController.TrackingPoint.position = m_collectible.transform.position;
+            m_initialRootPos = m_playerController.CurrentTrackedPosition;
             
             m_playing = true;
             m_wanderingTimer = 0.0f;
@@ -83,7 +85,7 @@ namespace Roots
                     m_collectible.transform.position,
                     l_progress);
 
-                m_bloomOverride.intensity.value = l_progress * 7.0f;
+                m_bloomOverride.intensity.value = l_progress * 10.0f;
                 m_bloomOverride.threshold.value = 1.0f - l_progress;
 
                 if (m_moveTowardTimer >= m_moveTowardDuration)
@@ -121,6 +123,7 @@ namespace Roots
             FindObjectOfType<SoundController>().SetMusicVolume(1.0f);
             FindObjectOfType<RootHead>().enabled = true;
             m_playerController.InCinematic = false;
+            m_playerController.TrackingPoint.position = m_playerController.CurrentTrackedPosition;
         }
     }
 }

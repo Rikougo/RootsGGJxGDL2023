@@ -55,12 +55,11 @@ namespace Roots
             set => m_shapePool.CurrentSpriteShape.spline.SetPosition(m_currentPointIdx, value);
         }
         public bool InCinematic { get; set; }
-
-
-        private bool ZoomMode
+        public Transform TrackingPoint => m_trackingPoint;
+        public bool ZoomMode
         {
             get => m_zoomMode;
-            set
+            private set
             {
                 if (m_zoomMode == value) return;
                 

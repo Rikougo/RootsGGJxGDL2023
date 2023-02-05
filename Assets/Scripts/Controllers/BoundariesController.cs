@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace Roots
 {
     public class BoundariesController : MonoBehaviour
     {
-        [Flags]
         public enum ZoneUnlock
         {
             NONE  = 0,
@@ -13,12 +13,18 @@ namespace Roots
             ROCK  = 2,
             LAVA  = 3,
             END   = 4,
+            ALL   = 5
         }
         
         [SerializeField] private GameObject[] m_waterBoundary;
         [SerializeField] private GameObject[] m_rockBoundary;
         [SerializeField] private GameObject[] m_lavaBoundary;
         [SerializeField] private GameObject[] m_endBoundary;
+
+        [SerializeField] private SpriteShape m_spriteShape;
+        [SerializeField] private Sprite m_waterRoot;
+        [SerializeField] private Sprite m_rockRoot;
+        [SerializeField] private Sprite m_lavaRoot;
 
         private ZoneUnlock m_unlocked;
 
@@ -42,14 +48,17 @@ namespace Roots
                 case ZoneUnlock.WATER:
                     foreach (GameObject l_go in m_waterBoundary) 
                         l_go.layer = 0;
+                    m_spriteShape.angleRanges[0].sprites[0] = m_waterRoot;
                     break;
                 case ZoneUnlock.ROCK:
                     foreach (GameObject l_go in m_rockBoundary) 
                         l_go.layer = 0;
+                    m_spriteShape.angleRanges[0].sprites[0] = m_rockRoot;
                     break;
                 case ZoneUnlock.LAVA:
                     foreach (GameObject l_go in m_lavaBoundary) 
                         l_go.layer = 0;
+                    m_spriteShape.angleRanges[0].sprites[0] = m_lavaRoot;
                     break;
                 case ZoneUnlock.END:
                     foreach (GameObject l_go in m_endBoundary) 
