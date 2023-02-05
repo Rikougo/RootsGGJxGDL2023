@@ -15,10 +15,10 @@ namespace Roots
             END   = 4,
         }
         
-        [SerializeField] private GameObject m_waterBoundary;
-        [SerializeField] private GameObject m_rockBoundary;
-        [SerializeField] private GameObject m_lavaBoundary;
-        [SerializeField] private GameObject m_endBoundary;
+        [SerializeField] private GameObject[] m_waterBoundary;
+        [SerializeField] private GameObject[] m_rockBoundary;
+        [SerializeField] private GameObject[] m_lavaBoundary;
+        [SerializeField] private GameObject[] m_endBoundary;
 
         private ZoneUnlock m_unlocked;
 
@@ -40,16 +40,20 @@ namespace Roots
             switch (m_unlocked)
             {
                 case ZoneUnlock.WATER:
-                    m_waterBoundary.layer = 0;
+                    foreach (GameObject l_go in m_waterBoundary) 
+                        l_go.layer = 0;
                     break;
                 case ZoneUnlock.ROCK:
-                    m_rockBoundary.layer = 0;
+                    foreach (GameObject l_go in m_rockBoundary) 
+                        l_go.layer = 0;
                     break;
                 case ZoneUnlock.LAVA:
-                    m_lavaBoundary.layer = 0;
+                    foreach (GameObject l_go in m_lavaBoundary) 
+                        l_go.layer = 0;
                     break;
                 case ZoneUnlock.END:
-                    m_endBoundary.layer = 0;
+                    foreach (GameObject l_go in m_endBoundary) 
+                        l_go.layer = 0;
                     break;
             }
         }

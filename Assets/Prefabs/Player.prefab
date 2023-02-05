@@ -460,8 +460,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_squareSelectThreshold: 0.25
   m_rootSpeed: 2
-  m_cutSize: 0.5
+  m_cutSize: 1.5
   m_cameraSpeed: 4
+  m_maxCapacity: 15
+  m_recoverFactor: 0.5
   m_trackingPoint: {fileID: 0}
   m_hoverSelectTransform: {fileID: 0}
   m_virtualCamera: {fileID: 0}
+  m_globalVolume: {fileID: 0}

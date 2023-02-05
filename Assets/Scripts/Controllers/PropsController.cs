@@ -23,8 +23,12 @@ namespace Roots
         [SerializeField] private bool m_debugGenerateWaterProps;
         [SerializeField] private bool m_debugCleanupWaterProps;
 
+        [Header("WaterSettings")] 
+        [SerializeField] private float m_waterDisplacement = 1.0f;
+
         private Transform[] m_waterPropsTransform;
         private Vector3[] m_waterPropsPositions;
+        private float[] m_waterPropsOffset;
         
         private void OnEnable()
         {
@@ -58,6 +62,7 @@ namespace Roots
         {
             m_waterPropsTransform = new Transform[m_waterPropsAmount];
             m_waterPropsPositions = new Vector3[m_waterPropsAmount];
+            m_waterPropsOffset = new float[m_waterPropsAmount];
 
             Vector2 l_halfAreaSize = m_waterArea.size / 2.0f;
             Vector3 l_areaPosition = m_waterArea.transform.position;
@@ -80,6 +85,7 @@ namespace Roots
                 l_transform.localScale = new Vector3(l_scale, l_scale, l_scale);
                 m_waterPropsTransform[l_index] = l_transform;
                 m_waterPropsPositions[l_index] = l_transform.position;
+                m_waterPropsOffset[l_index] = Random.Range(0, (float)Math.PI);
             }
         }
 
@@ -90,7 +96,7 @@ namespace Roots
             for (int l_index = 0; l_index < m_waterPropsTransform.Length; l_index++)
             {
                 Vector3 l_position = m_waterPropsPositions[l_index];
-                Vector3 l_delta = Vector3.up * ((float)Math.Sin(Time.time + l_position.x * 0.25f) * 0.2f);
+                Vector3 l_delta = Vector3.up * ((float)Math.Sin(Time.time + m_waterPropsOffset[l_index]) * m_waterDisplacement);
                 m_waterPropsTransform[l_index].position = l_position + l_delta;
             }
         }

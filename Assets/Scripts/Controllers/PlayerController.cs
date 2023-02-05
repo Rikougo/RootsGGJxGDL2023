@@ -25,6 +25,7 @@ namespace Roots
         [SerializeField] private Transform m_hoverSelectTransform;
         [SerializeField] private CinemachineVirtualCamera m_virtualCamera;
         [SerializeField] private Volume m_globalVolume;
+        [SerializeField] private AudioClip m_startMovingSound;
 
         private VolumeProfile m_globalProfile;
         private SpriteShapeControllerPool m_shapePool;
@@ -38,6 +39,7 @@ namespace Roots
         private Vector3 m_lastDirection;
         private float m_currentCapacity;
         private float m_currentSize;
+        private float m_deepestGone;
         
         // current spline point working on
         private int m_currentPointIdx = 2;
@@ -47,7 +49,13 @@ namespace Roots
         public Vector3 CurrentDirection => m_lastDirection;
         public Vector3 CursorPosition => m_cursorPosition;
 
-        public Vector3 CurrentTrackedPosition => m_shapePool.CurrentSpriteShape.spline.GetPosition(m_currentPointIdx);
+        public Vector3 CurrentTrackedPosition
+        {
+            get => m_shapePool.CurrentSpriteShape.spline.GetPosition(m_currentPointIdx);
+            set => m_shapePool.CurrentSpriteShape.spline.SetPosition(m_currentPointIdx, value);
+        }
+        public bool InCinematic { get; set; }
+
 
         private bool ZoomMode
         {
@@ -90,7 +98,7 @@ namespace Roots
                 m_trackingPoint.GetComponent<RootHead>().OnPickup += Pickup;
             }
 
-            m_input.actions["Click"].performed += OnClick;
+            m_input.actions["Click"].started += OnClick;
             m_input.actions["Click"].canceled += OnClick;
 
             m_input.actions["Cursor"].performed += OnCursor;
@@ -110,7 +118,7 @@ namespace Roots
             }
             
             
-            m_input.actions["Click"].performed -= OnClick;
+            m_input.actions["Click"].started -= OnClick;
             m_input.actions["Click"].canceled -= OnClick;
             
             m_input.actions["Cursor"].performed -= OnCursor;
@@ -123,9 +131,13 @@ namespace Roots
 
         private void Update()
         {
+            if (InCinematic) return;
+            
             if (ZoomMode) UpdateCamera();
             else UpdateRoot();
 
+            m_deepestGone = Mathf.Min(m_deepestGone, CurrentTrackedPosition.y);
+            
             if (ZoomMode || !m_clicking)
             {
                 // PASSIVE CAPACITY INCREASE
@@ -143,8 +155,12 @@ namespace Roots
         {
             if (m_clicking)
             {
-                m_trackingPoint.position -= new Vector3(m_cursorDelta.x, m_cursorDelta.y, 0.0f) * 
-                    (Time.deltaTime * m_cameraSpeed);
+                Vector3 l_position = m_trackingPoint.position;
+                l_position -= new Vector3(m_cursorDelta.x, m_cursorDelta.y, 0.0f) * 
+                                            (Time.deltaTime * m_cameraSpeed);
+                l_position.y = Mathf.Max(l_position.y, m_deepestGone);
+                m_trackingPoint.position = l_position;
+
             }
         }
         
@@ -155,8 +171,17 @@ namespace Roots
                 Vector3 l_currentSelectedPoint = CurrentTrackedPosition;
                 l_currentSelectedPoint.z = 0;
 
-                l_currentSelectedPoint += Vector3.up * Time.deltaTime;
-                m_shapePool.CurrentSpriteShape.spline.SetPosition(m_currentPointIdx, l_currentSelectedPoint);
+                l_currentSelectedPoint -= CurrentDirection * Time.deltaTime;
+
+                float l_previousPointDist = (l_currentSelectedPoint -
+                                             m_shapePool.CurrentSpriteShape.spline.GetPosition(m_currentPointIdx - 1)).magnitude;
+                if (l_previousPointDist < 0.1f)
+                {
+                    m_shapePool.CurrentSpriteShape.spline.RemovePointAt(m_currentPointIdx);
+                    m_currentPointIdx--;
+                }
+
+                CurrentTrackedPosition = l_currentSelectedPoint;
                 m_trackingPoint.position = l_currentSelectedPoint;
                 
                 m_disabledTimer -= Time.deltaTime;
@@ -167,11 +192,14 @@ namespace Roots
             
             if (m_clicking)
             {
+                if (m_hoverSelectTransform.gameObject.activeSelf)
+                    m_hoverSelectTransform.gameObject.SetActive(false);
+                
                 if (m_currentCapacity <= 0.0f)
                 {
                     return;
                 }
-                
+
                 Vector3 l_currentSelectedPoint = CurrentTrackedPosition;
                 l_currentSelectedPoint.z = 0;
 
@@ -183,7 +211,7 @@ namespace Roots
                 float l_deltaPosition = m_rootSpeed * Time.deltaTime;
                 l_currentSelectedPoint += l_direction * l_deltaPosition;
                 
-                m_shapePool.CurrentSpriteShape.spline.SetPosition(m_currentPointIdx, l_currentSelectedPoint);
+                CurrentTrackedPosition = l_currentSelectedPoint;
                 
                 m_currentSize += l_deltaPosition;
 
@@ -230,16 +258,22 @@ namespace Roots
             Gizmos.DrawWireSphere(m_cursorPosition, 0.2f);
         }
 
-        private void KnockBack()
+        private void KnockBack(Collider2D p_groundCollider)
         {
             m_disabledTimer = 0.5f;
         }
 
         private void Pickup(Collectible p_collectible)
         {
+            if (InCinematic) return;
+            
             if (p_collectible.Type == Collectible.CollectibleType.ITEM)
             {
+                m_clicking = false;
+                m_currentCapacity = m_maxCapacity;
+
                 FindObjectOfType<BoundariesController>().UnlockZone(p_collectible.Zone);
+                FindObjectOfType<UnlockController>().ItemCollected(this, p_collectible);
             }
             else
             {
@@ -248,7 +282,9 @@ namespace Roots
                 m_currentPointIdx = 1;
                 m_currentSize = 0.0f;
 
-                m_currentCapacity = 10.0f;
+                m_currentCapacity = m_maxCapacity;
+                
+                Destroy(p_collectible.gameObject);
             }
         }
         
@@ -256,11 +292,15 @@ namespace Roots
 
         private void OnClick(InputAction.CallbackContext p_ctx)
         {
-            m_clicking = p_ctx.performed && m_currentCapacity > 1.0f;
+            if (InCinematic) return;
+            
+            m_clicking = p_ctx.started && m_currentCapacity > 1.0f;
+            
+            if (!ZoomMode && p_ctx.started) FindObjectOfType<SoundController>().PlaySound(m_startMovingSound);
 
             // On click, select closest leaf
             // TODO IMPROVE ACCURACY (USING COLLIDER ?)
-            if (p_ctx.performed)
+            if (p_ctx.started)
             {
                 Vector3[] l_leafPosition = m_shapePool.LeafPositions;
 
@@ -285,17 +325,23 @@ namespace Roots
 
         private void OnCursor(InputAction.CallbackContext p_ctx)
         {
+            if (InCinematic) return;
+            
             m_cursorPosition = Camera.main.ScreenToWorldPoint(p_ctx.ReadValue<Vector2>());
             m_cursorPosition.z = 0;
         }
 
         private void OnCursorDelta(InputAction.CallbackContext p_ctx)
         {
+            if (InCinematic) return;
+            
             m_cursorDelta = p_ctx.ReadValue<Vector2>();
         }
 
         private void OnSplit(InputAction.CallbackContext p_ctx)
         {
+            if (InCinematic) return;
+            
             m_shapePool.SplitCurrent(CurrentDirection);
 
             m_currentPointIdx = 1;
@@ -304,6 +350,8 @@ namespace Roots
 
         private void OnSwitch(InputAction.CallbackContext p_ctx)
         {
+            if (InCinematic) return;
+            
             ZoomMode = !ZoomMode;
         }
         

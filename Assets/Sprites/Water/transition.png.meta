@@ -1808,7 +1808,6 @@ TextureImporter:
     secondaryTextures: []
     nameFileIdTable:
       transition_6: -1253791872
-      transition_76: 239948103
       transition_18: 1769612981
       transition_17: 735405672
       transition_36: 1058940082
@@ -1875,10 +1874,11 @@ TextureImporter:
       transition_69: 871464573
       transition_55: 197400603
       transition_19: -1714823147
+      transition_76: 239948103
       transition_41: 1976888478
       transition_8: -568776500
-      transition_60: 148662986
       transition_29: 692386125
+      transition_60: 148662986
       transition_33: 1887061367
       transition_39: -940377569
       transition_21: 2048726971

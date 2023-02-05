@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Roots
 {
@@ -10,22 +9,21 @@ namespace Roots
         [SerializeField] private LayerMask m_boundaryLayerMask;
         [SerializeField] private LayerMask m_itemLayerMask;
         
-        public Action OnCollide;
+        public Action<Collider2D> OnCollide;
         public Action<Collectible> OnPickup;
         
         public void FixedUpdate()
         {
-            if (Physics2D.OverlapCircle(transform.position, m_radius, m_boundaryLayerMask))
+            Collider2D l_groundCollider = Physics2D.OverlapCircle(transform.position, m_radius, m_boundaryLayerMask);
+            if (l_groundCollider)
             {
-                OnCollide?.Invoke();
+                OnCollide?.Invoke(l_groundCollider);
             }
 
             Collider2D l_itemCollider = Physics2D.OverlapCircle(transform.position, m_radius, m_itemLayerMask);
             if (l_itemCollider)
             {
                 OnPickup?.Invoke(l_itemCollider.GetComponent<Collectible>());
-                
-                Destroy(l_itemCollider.gameObject);
             }
         }
 

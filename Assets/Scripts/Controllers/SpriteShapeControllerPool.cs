@@ -91,7 +91,7 @@ namespace Roots
             
             l_leftShape.spline.SetLeftTangent(1, l_leftDirection * 0.1f);
             l_leftShape.spline.SetRightTangent(1,l_leftDirection * 0.1f);
-            l_leftShape.spline.SetPosition(1, l_currentPosition + l_leftDirection * 0.25f);
+            l_leftShape.spline.SetPosition(1, l_currentPosition + l_leftDirection * 0.5f);
 
             SpriteShapeController l_rightShape = Instantiate(m_newRootPrefab, Vector3.zero, Quaternion.identity, m_rootParent.transform);
             l_rightShape.gameObject.name = $"{l_shapeController.gameObject.name}_R";
@@ -99,7 +99,7 @@ namespace Roots
             
             l_rightShape.spline.SetLeftTangent(1,  l_rightDirection * 0.1f);
             l_rightShape.spline.SetRightTangent(1, l_rightDirection * 0.1f);
-            l_rightShape.spline.SetPosition(1, l_currentPosition + l_rightDirection * 0.25f);
+            l_rightShape.spline.SetPosition(1, l_currentPosition + l_rightDirection * 0.5f);
 
             m_registeredSpriteShapes.Add(l_leftShape);
             m_registeredSpriteShapes.Add(l_rightShape);
